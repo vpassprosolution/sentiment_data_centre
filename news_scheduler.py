@@ -9,25 +9,29 @@ load_dotenv()
 
 # PostgreSQL connection URL
 DATABASE_URL = os.getenv("DATABASE_URL")
+NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")  # Load API key from .env file
 
 # Function to fetch news articles and store them in the database
 def fetch_news():
     print("\n🔄 Fetching latest financial news...")
 
     # Fetch news from an API (replace with your actual API call)
-    news_api_url = "https://newsapi.org/v2/everything?q=financial&apiKey=YOUR_API_KEY"
+    news_api_url = f"https://newsapi.org/v2/everything?q=financial&apiKey={NEWSAPI_KEY}"
     
     # Make the API request
     try:
         response = requests.get(news_api_url)
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx, 5xx)
 
+        # Print the full API response for debugging
+        print("API Response:", response.json())  # Debugging: print the full response
+
         # Check if 'articles' exists in the response
         if "articles" not in response.json():
             print("❌ No 'articles' field found in the response.")
             print(f"Full API response: {response.json()}")
             return  # Exit the function if the 'articles' key is missing
-        
+
         articles = response.json()["articles"]
 
         if not articles:

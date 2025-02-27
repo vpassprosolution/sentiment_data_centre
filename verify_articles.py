@@ -1,31 +1,40 @@
 import psycopg2
+import os
+from dotenv import load_dotenv
 
-# Connect to PostgreSQL
-conn = psycopg2.connect("postgresql://postgres:lqXcYteJVjnFvaOOLUuVFLiqvkdIbFhC@crossover.proxy.rlwy.net:20588/railway")
+# Load environment variables
+load_dotenv()
 
+# PostgreSQL connection URL
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create a cursor
-cur = conn.cursor()
+# Verify stored articles
+def verify_articles():
+    print("\n📰 Verifying Stored Financial News Articles...")
 
-# Count the number of stored articles
-cur.execute("SELECT COUNT(*) FROM news_articles;")
-article_count = cur.fetchone()[0]
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
 
-print(f"\n📰 Total Financial News Articles Stored: {article_count}")
+        # Get the total number of articles stored
+        cur.execute("SELECT COUNT(*) FROM news_articles;")
+        count = cur.fetchone()[0]
+        print(f"✅ Total Financial News Articles Stored: {count}")
 
-# Retrieve the latest 5 articles for preview
-cur.execute("SELECT * FROM news_articles ORDER BY published_at DESC LIMIT 5;")
-articles = cur.fetchall()
+        # Preview the latest 5 articles
+        cur.execute("SELECT * FROM news_articles ORDER BY published_at DESC LIMIT 5;")
+        articles = cur.fetchall()
 
-print("\n📈 Preview of Latest 5 Articles:")
-for article in articles:
-    print(f"ID: {article[0]}")
-    print(f"Title: {article[1]}")
-    print(f"URL: {article[2]}")
-    print(f"Source: {article[3]}")
-    print(f"Published At: {article[4]}")
-    print("-" * 40)
+        print("\n📈 Preview of Latest 5 Articles:")
+        for article in articles:
+            print(f"ID: {article[0]} | Title: {article[1]} | URL: {article[2]} | Source: {article[3]} | Published At: {article[4]}")
 
-# Close connection
-cur.close()
-conn.close()
+        # Close the connection
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+# Run the verification
+verify_articles()
