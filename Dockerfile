@@ -10,8 +10,9 @@ COPY . /app
 # Install the necessary dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose a dummy port (since Railway might expect one)
+# Expose a dummy port to prevent Railway from shutting down the container
 EXPOSE 8080
 
-# Start the news_scheduler.py script and keep it running
+# Run the news_scheduler.py script as a background job
 CMD ["python", "news_scheduler.py"]
+
