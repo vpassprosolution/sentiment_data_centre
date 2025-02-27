@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose port for Railway
 EXPOSE 8080
 
-# Run the simple test script to confirm the container keeps running
-CMD ["python", "test_start.py"]
+# Run the background job (news_scheduler.py)
+CMD ["python", "news_scheduler.py"]
