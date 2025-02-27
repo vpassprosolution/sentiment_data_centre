@@ -15,7 +15,7 @@ def fetch_news():
     print("\n🔄 Fetching latest financial news...")
 
     # Fetch news from an API (replace with your actual API call)
-    news_api_url = "https://newsapi.org/v2/everything?q=financial&apiKey=YOUR_API_KEY"
+    news_api_url = f"https://newsapi.org/v2/everything?q=financial&apiKey={os.getenv('NEWSAPI_KEY')}"
     
     # Make the API request
     try:
@@ -28,7 +28,6 @@ def fetch_news():
         # Check if 'articles' exists in the response
         if "articles" not in response.json():
             print("❌ No 'articles' field found in the response.")
-            print(f"Full API response: {response.json()}")
             return  # Exit the function if the 'articles' key is missing
 
         articles = response.json()["articles"]
@@ -50,6 +49,9 @@ def fetch_news():
             source = article.get("source", {}).get("name", "Unknown Source")
             published_at = article.get("publishedAt", "Unknown Date")
 
+            # Debugging: Log the article being inserted
+            print(f"Inserting article: {title} - {url}")
+
             # Insert data into PostgreSQL
             try:
                 cur.execute("""
@@ -57,8 +59,9 @@ def fetch_news():
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (url) DO NOTHING;
                 """, (title, url, source, published_at))
+                print(f"✅ Inserted article: {title}")  # Log successful insertion
             except Exception as e:
-                print(f"❌ Error inserting article into the database: {e}")
+                print(f"❌ Error inserting article '{title}' into the database: {e}")
                 continue  # Skip this article and move to the next one
 
         # Commit the changes to the database
