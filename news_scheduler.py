@@ -16,26 +16,49 @@ def fetch_news():
 
     # Fetch news from an API (replace with your actual API call)
     news_api_url = "https://newsapi.org/v2/everything?q=financial&apiKey=YOUR_API_KEY"
-    response = requests.get(news_api_url)
-    articles = response.json()["articles"]
-
+    
+    # Make the API request
     try:
+        response = requests.get(news_api_url)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx, 5xx)
+
+        # Check if 'articles' exists in the response
+        if "articles" not in response.json():
+            print("❌ No 'articles' field found in the response.")
+            print(f"Full API response: {response.json()}")
+            return  # Exit the function if the 'articles' key is missing
+        
+        articles = response.json()["articles"]
+
+        if not articles:
+            print("❌ No articles found.")
+            return  # Exit the function if no articles are found
+        
+        print(f"Fetched {len(articles)} articles.")
+
+        # Connect to PostgreSQL
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
         # Insert each article into the database
         for article in articles:
-            title = article["title"]
-            url = article["url"]
-            source = article["source"]["name"]
-            published_at = article["publishedAt"]
+            title = article.get("title", "No Title")
+            url = article.get("url", "No URL")
+            source = article.get("source", {}).get("name", "Unknown Source")
+            published_at = article.get("publishedAt", "Unknown Date")
 
-            cur.execute("""
-                INSERT INTO news_articles (title, url, source, published_at)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (url) DO NOTHING;
-            """, (title, url, source, published_at))
+            # Insert data into PostgreSQL
+            try:
+                cur.execute("""
+                    INSERT INTO news_articles (title, url, source, published_at)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (url) DO NOTHING;
+                """, (title, url, source, published_at))
+            except Exception as e:
+                print(f"❌ Error inserting article into the database: {e}")
+                continue  # Skip this article and move to the next one
 
+        # Commit the changes to the database
         conn.commit()
         print("✅ Articles fetched and stored successfully!")
 
@@ -43,8 +66,12 @@ def fetch_news():
         cur.close()
         conn.close()
 
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Error fetching data from NewsAPI: {e}")
+    except psycopg2.Error as e:
+        print(f"❌ Database error: {e}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Unexpected error: {e}")
 
 # Run the fetch_news function every 2 hours
 while True:
