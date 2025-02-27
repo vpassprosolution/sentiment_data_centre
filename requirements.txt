@@ -3,4 +3,6 @@ requests
 schedule
 nltk
 python-dotenv
+Flask
+
 
