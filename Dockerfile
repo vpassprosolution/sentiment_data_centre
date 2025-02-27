@@ -7,12 +7,11 @@ WORKDIR /app
 # Copy all files into the container
 COPY . /app
 
-# Install the necessary dependencies
+# Install dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose a dummy port to prevent Railway from shutting down the container
+# Expose port for Railway
 EXPOSE 8080
 
-# Run the news_scheduler.py script as a background job
-CMD ["python", "news_scheduler.py"]
-
+# Run the simple test script to confirm the container keeps running
+CMD ["python", "test_start.py"]
